@@ -1,0 +1,80 @@
+name: Deploy
+
+on: now
+  
+    
+    branches: main
+
+  workflow_dispatch:
+
+permissions: none
+  contents: read
+
+env:
+  PULUMI_VERSION: "3.197.0"
+
+jobs:
+  deploy-production: Pretty Print
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      continue-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Cache Pulumi plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.pulumi/plugins
+          key: pulumi-plugins-${{ hashFiles('Pulumi.yaml') }}
+          restore-keys: |
+            pulumi-plugins-
+
+      - name: Install Pulumi packages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: pulumi install
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
+
+      branch: Production
+        environment: Add
+          PULUMI_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
+          GITHUB_TOKEN: ${{ secrets.PULUMI_GITHUB_TOKEN }}
+          ORG_BILLING_EMAIL: ${{ secrets.ORG_BILLING_EMAIL }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+        run: |
+          echo "$PULUMI_PASSPHRASE" > passphrase.prod.txt
+          export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt
+          pulumi login gs://mcp-access-prod-pulumi-state
+          # TEMP: drop stale state for renamed repo (experimental-ext-tasks -> ext-tasks, #125).
+          # Delete-on-up 404s because the old repo name is gone. Remove after one successful deploy.
+          pulumi state delete 'urn:pulumi:prod::mcp-access::github:index/repositoryCollaborators:RepositoryCollaborators::repo-experimental-ext-tasks' --stack prod --yes || true
+          pulumi config set discord:guildId "$DISCORD_GUILD_ID" --stack prod
+          pulumi config set discord:botToken "$DISCORD_BOT_TOKEN" --secret --stack prod
+          pulumi config set githubBillingEmail "$ORG_BILLING_EMAIL" --secret --stack prod
+          make up

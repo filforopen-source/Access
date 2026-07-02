@@ -11,6 +11,24 @@ Infrastructure as Code for managing access to MCP community resources using Pulu
 - **GitHub Teams**: Automatically syncs team memberships in the MCP GitHub organization
 - **Google Workspace Groups**: Automatically syncs group memberships for @modelcontextprotocol.io email accounts
   - **Email Groups**: Groups with `isEmailGroup: true` accept emails from anyone (including external users) and notify all members. External posts are moderated for security.
+- **Google Workspace User Accounts**: Provisions @modelcontextprotocol.io accounts for members of roles with `provisionUser: true`
+
+### Opting in to a Google Workspace account (maintainers)
+
+If you're a maintainer and want an `@modelcontextprotocol.io` account, open a PR adding the following fields to your entry in [`src/config/users.ts`](src/config/users.ts):
+
+```ts
+{
+  github: 'your-github-username',
+  // ...
+  firstName: 'Your',
+  lastName: 'Name',
+  googleEmailPrefix: 'yourname', // -> yourname@modelcontextprotocol.io
+  memberOf: [ROLE_IDS.MAINTAINERS /* , ... */],
+},
+```
+
+Once merged, Pulumi provisions the account. An admin will share your initial password (retrievable via `pulumi stack output --show-secrets newGWSUserPasswords`).
 
 ## Deployment
 
@@ -21,6 +39,7 @@ Infrastructure as Code for managing access to MCP community resources using Pulu
 ### Manual Deployment
 
 Pre-requisites:
+
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
 - [Google Cloud SDK installed](https://cloud.google.com/sdk/docs/install)
 - Access to GCP project and GCS bucket
@@ -79,6 +98,7 @@ gsutil mb gs://mcp-access-prod-pulumi-state
 ```
 
 Then:
+
 1. In Google Workspace Admin Console, go to **Account** → **Admin roles**
 2. Select **Groups Admin** role (or create a custom role with these privileges):
    - Read, create, update, and delete groups
@@ -104,5 +124,6 @@ pulumi config set --secret github:token "ghp_your_github_token_here"
 ### 3. Configure GitHub Actions Secrets
 
 Add the CI/CD secrets to GitHub Actions (repository settings → Secrets and variables → Actions):
+
 - `GCP_PROD_SERVICE_ACCOUNT_KEY`: Content of `sa-key.json`
 - `PULUMI_PROD_PASSPHRASE`: The passphrase you set above

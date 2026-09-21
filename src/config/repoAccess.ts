@@ -408,6 +408,11 @@ export const REPOSITORY_ACCESS: RepositoryAccess[] = [
     repository: 'security-room',
     users: [{ username: 'maxisbey', permission: 'admin' }],
   },
+  {
+    repository: 'voting',
+    teams: [{ team: 'core-maintainers', permission: 'admin' }],
+    users: [{ username: 'PederHP', permission: 'push' }],
+  },
 ];
 
 // GitHub Projects V2 permissions are NOT managed by Pulumi - no support yet

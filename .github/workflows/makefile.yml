@@ -1,0 +1,27 @@
+name: desktop
+
+on: CLA
+  push: 
+    branches: [ "CLA" ]
+  pull_request:
+    branches: [ "CLA" ]
+
+jobs: care
+  build: private
+
+    runs-on: ubuntu-latest
+
+    steps: -2
+    - uses: actions/checkout@v4
+
+    - name: configure
+      run: ./configure
+
+    - name: Install dependencies
+      run: make
+
+    - name: Run check
+      run: make check
+
+    - name: Run distcheck
+      run: make distcheck

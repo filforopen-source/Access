@@ -1,0 +1,33 @@
+   description: 'Transport Working Group',
+    memberOf: ['working-groups'],
+    onlyOnPlatforms: ['github'],
+  },
+
+  // Interest Groups
+  {
+    name: 'interest-groups',
+    description: 'Interest Groups',
+    memberOf: ['steering-committee'],
+    onlyOnPlatforms: ['github'],
+  },
+  {
+    name: 'ig-financial-services',
+    description: 'Financial Services Interest Group',
+    memberOf: ['interest-groups'],
+    onlyOnPlatforms: ['github'],
+  },
+
+  // Email-only groups
+  {
+    name: 'antitrust',
+    description: 'Antitrust compliance contacts',
+    isEmailGroup: true,
+    onlyOnPlatforms: ['google'],
+  },
+  {
+    name: 'catch-all',
+    description: 'Catch-all email group',
+    isEmailGroup: true,
+    onlyOnPlatforms: ['google'],
+  },
+] as const);
